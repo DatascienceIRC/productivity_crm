@@ -1,7 +1,7 @@
 import * as XLSX from "xlsx";
 import React, { useState, useEffect } from "react";
 
-const BASE_URL = "https://your-backend-url.onrender.com";
+const BASE_URL = "https://productivity-crm-backend.onrender.com";
 
 /* ================= DATE FORMAT ================= */
 
@@ -34,23 +34,23 @@ export default function CRMApp() {
 
     setIsAdmin(role === "admin");
 
-    const BASE_URL = "https://your-backend-url.onrender.com";
-
-const url =
-  role === "admin"
-    ? `${BASE_URL}/records`
-    : `${BASE_URL}/records/${userId}`;
-
+    const url =
+      role === "admin"
+        ? `${BASE_URL}/records`
+        : `${BASE_URL}/records/${userId}`;
 
     fetch(url)
       .then(res => res.json())
-      .then(data => setRecords(data));
+      .then(data => setRecords(data))
+      .catch(err => console.error(err));
 
   }, []);
 
   /* ================= FILTER BY DATE ================= */
 
   const loadByDate = (date) => {
+
+    if (!date) return alert("Select date");
 
     const userId = localStorage.getItem("userId");
     const role = localStorage.getItem("role");
@@ -69,19 +69,16 @@ const url =
   };
 
   if (!isAuth) {
-    return (
-      <Login onLogin={(role) => {
-        setIsAuth(true);
-        setIsAdmin(role === "admin");
-      }} />
-    );
+    return <Login onLogin={(role) => {
+      setIsAuth(true);
+      setIsAdmin(role === "admin");
+    }} />;
   }
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
 
       {/* SIDEBAR */}
-
       <div style={{
         width: menuOpen ? 220 : 0,
         background: "#0f172a",
@@ -90,41 +87,37 @@ const url =
         transition: "0.3s"
       }}>
 
-       <h2>CRM</h2>
+        <h2>CRM</h2>
 
-{isAdmin && (
-  <div style={{ 
-    margin: "10px 0 20px 0", 
-    padding: "6px 10px",
-    background: "#1e293b",
-    borderRadius: 6,
-    fontSize: 13,
-    opacity: 0.8
-  }}>
-    👑 Admin Mode
-  </div>
-)}
+        {isAdmin && (
+          <div style={{
+            margin: "10px 0 20px",
+            padding: "6px 10px",
+            background: "#1e293b",
+            borderRadius: 6,
+            fontSize: 13,
+            opacity: 0.8
+          }}>
+            👑 Admin Mode
+          </div>
+        )}
 
-<Nav label="Productivity" setPage={setPage} page="upload" />
-<Nav label="Records" setPage={setPage} page="records" />
-
-
+        <Nav label="Productivity" setPage={setPage} page="upload" />
+        <Nav label="Records" setPage={setPage} page="records" />
         <Nav label="Logout" setPage={logout} />
 
       </div>
 
       {/* CONTENT */}
-
       <div style={{ flex: 1, padding: 20 }}>
+
         <button onClick={() => setMenuOpen(!menuOpen)}>☰</button>
 
         {page === "upload" && <Upload setRecords={setRecords} />}
         {page === "records" && (
-          <Records 
-            records={records} 
-            loadByDate={loadByDate} 
-          />
+          <Records records={records} loadByDate={loadByDate} />
         )}
+
       </div>
 
     </div>
@@ -187,20 +180,11 @@ function Login({ onLogin }) {
 
         <h2>CRM Login</h2>
 
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          style={input}
-        />
+        <input placeholder="Email" value={email}
+          onChange={e => setEmail(e.target.value)} style={input} />
 
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          style={input}
-        />
+        <input placeholder="Password" type="password"
+          value={password} onChange={e => setPassword(e.target.value)} style={input} />
 
         <button onClick={login} style={btn}>Login</button>
 
@@ -228,20 +212,20 @@ function Upload({ setRecords }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ date, task, userId })
     })
-    .then(() => {
+      .then(() => {
 
-      const url =
-        role === "admin"
-          ? "http://localhost:5000/records"
-          : `http://localhost:5000/records/${userId}`;
+        const url =
+          role === "admin"
+            ? `${BASE_URL}/records`
+            : `${BASE_URL}/records/${userId}`;
 
-      fetch(url)
-        .then(res => res.json())
-        .then(data => setRecords(data));
+        fetch(url)
+          .then(res => res.json())
+          .then(data => setRecords(data));
 
-      setDate("");
-      setTask("");
-    });
+        setDate("");
+        setTask("");
+      });
   };
 
   return (
@@ -249,19 +233,15 @@ function Upload({ setRecords }) {
 
       <h2 style={titleStyle}>Daily Productivity</h2>
 
-      <input type="date" value={date} onChange={e => setDate(e.target.value)} style={modernInput} />
+      <input type="date" value={date}
+        onChange={e => setDate(e.target.value)} style={modernInput} />
 
-      <textarea
-        value={task}
+      <textarea rows={4} value={task}
         onChange={e => setTask(e.target.value)}
         placeholder="What did you work on today?"
-        rows={4}
-        style={modernInput}
-      />
+        style={modernInput} />
 
-      <button onClick={submit} style={modernBtn}>
-        Submit Productivity
-      </button>
+      <button onClick={submit} style={modernBtn}>Submit Productivity</button>
 
     </div>
   );
@@ -275,17 +255,13 @@ function Records({ records, loadByDate }) {
 
   const exportExcel = () => {
 
-    if (!records.length) {
-      alert("No data to export");
-      return;
-    }
+    if (!records.length) return alert("No data to export");
 
-    const worksheet = XLSX.utils.json_to_sheet(records);
-    const workbook = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(records);
+    const wb = XLSX.utils.book_new();
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Productivity");
-
-    XLSX.writeFile(workbook, "productivity_records.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, "Productivity");
+    XLSX.writeFile(wb, "productivity_records.xlsx");
   };
 
   return (
@@ -295,61 +271,47 @@ function Records({ records, loadByDate }) {
 
       <div style={filterBar}>
 
-        <input
-          type="date"
-          value={selectedDate}
+        <input type="date" value={selectedDate}
           onChange={e => setSelectedDate(e.target.value)}
-          style={modernInput}
-        />
+          style={modernInput} />
 
-        <button
-          onClick={() => loadByDate(selectedDate)}
-          style={modernBtn}
-        >
+        <button onClick={() => loadByDate(selectedDate)} style={modernBtn}>
           Load Records
         </button>
 
       </div>
 
-      <button style={excelBtn} onClick={exportExcel}>
-        Export to Excel
-      </button>
+      <button style={excelBtn} onClick={exportExcel}>Export to Excel</button>
 
-      <div style={tableWrapper}>
+      <table style={modernTable}>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Date</th>
+            <th>Task</th>
+          </tr>
+        </thead>
 
-        <table style={modernTable}>
+        <tbody>
 
-          <thead>
+          {records.length === 0 && (
             <tr>
-              <th>User</th>
-              <th>Date</th>
-              <th>Task</th>
+              <td colSpan="3" style={{ textAlign: "center", padding: 20 }}>
+                No records found
+              </td>
             </tr>
-          </thead>
+          )}
 
-          <tbody>
+          {records.map((r, i) => (
+            <tr key={i}>
+              <td>{r.name || "You"}</td>
+              <td>{formatDate(r.date)}</td>
+              <td>{r.task}</td>
+            </tr>
+          ))}
 
-            {records.length === 0 && (
-              <tr>
-                <td colSpan="3" style={{ padding: 20, textAlign: "center" }}>
-                  No records found
-                </td>
-              </tr>
-            )}
-
-            {records.map((r, i) => (
-              <tr key={i}>
-                <td>{r.name || "You"}</td>
-                <td>{formatDate(r.date)}</td>
-                <td>{r.task}</td>
-              </tr>
-            ))}
-
-          </tbody>
-
-        </table>
-
-      </div>
+        </tbody>
+      </table>
 
     </div>
   );
@@ -371,7 +333,6 @@ const btn = {
   border: "none"
 };
 
-// Productivity page styles
 const modernInput = {
   width: "100%",
   padding: "14px",
@@ -392,7 +353,6 @@ const modernBtn = {
   marginBottom: 20
 };
 
-// Records page styles
 const recordsContainer = {
   maxWidth: 900,
   margin: "40px auto",
@@ -422,10 +382,6 @@ const excelBtn = {
   borderRadius: 8,
   cursor: "pointer",
   marginBottom: 20
-};
-
-const tableWrapper = {
-  overflowX: "auto"
 };
 
 const modernTable = {
