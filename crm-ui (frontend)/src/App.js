@@ -1,6 +1,8 @@
 import * as XLSX from "xlsx";
 import React, { useState, useEffect } from "react";
 
+const BASE_URL = "https://your-backend-url.onrender.com";
+
 /* ================= DATE FORMAT ================= */
 
 function formatDate(dateStr) {
@@ -32,10 +34,13 @@ export default function CRMApp() {
 
     setIsAdmin(role === "admin");
 
-    const url =
-      role === "admin"
-        ? "http://localhost:5000/records"
-        : `http://localhost:5000/records/${userId}`;
+    const BASE_URL = "https://your-backend-url.onrender.com";
+
+const url =
+  role === "admin"
+    ? `${BASE_URL}/records`
+    : `${BASE_URL}/records/${userId}`;
+
 
     fetch(url)
       .then(res => res.json())
@@ -50,7 +55,7 @@ export default function CRMApp() {
     const userId = localStorage.getItem("userId");
     const role = localStorage.getItem("role");
 
-    fetch(`http://localhost:5000/records-by-date?date=${date}&userId=${userId}&role=${role}`)
+    fetch(`${BASE_URL}/records-by-date?date=${date}&userId=${userId}&role=${role}`)
       .then(res => res.json())
       .then(data => setRecords(data))
       .catch(err => console.error(err));
@@ -148,7 +153,7 @@ function Login({ onLogin }) {
 
   const login = () => {
 
-    fetch("http://localhost:5000/login", {
+    fetch(`${BASE_URL}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password })
@@ -218,7 +223,7 @@ function Upload({ setRecords }) {
     const userId = localStorage.getItem("userId");
     const role = localStorage.getItem("role");
 
-    fetch("http://localhost:5000/records", {
+    fetch(`${BASE_URL}/records`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ date, task, userId })

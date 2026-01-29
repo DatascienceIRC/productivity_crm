@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
@@ -10,11 +12,13 @@ app.use(express.json());
 /* ================= MYSQL CONNECTION ================= */
 
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",     // put your MySQL password if any
-  database: "productivity_crm"
+  host: "railway-host",
+  user: "railway-user",
+  password: "railway-pass",
+  database: "railway-db"
 });
+
+
 
 db.connect(err => {
   if (err) {
